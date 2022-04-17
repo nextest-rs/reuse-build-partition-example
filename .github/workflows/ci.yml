@@ -1,3 +1,6 @@
+# Working example showing how to use nextest to reuse builds and partition test runs on GitHub Actions.
+# See workflow runs at https://github.com/nextest-rs/reuse-build-partition-example/actions/workflows/ci.yml.
+
 on:
   push:
     branches: [main]
