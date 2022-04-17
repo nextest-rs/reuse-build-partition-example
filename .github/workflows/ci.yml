@@ -3,7 +3,7 @@ on:
     branches: [main]
   schedule:
     # Run this every day at 01:00 UTC.
-    cron: 0 1 * * *
+    - cron: 0 1 * * *
 
 jobs:
   build-artifacts:
