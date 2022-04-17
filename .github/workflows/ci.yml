@@ -44,8 +44,6 @@ jobs:
     name: Run tests with partitioning
     runs-on: ubuntu-latest
     needs: build-test-artifacts
-    env:
-      NEXTEST_EXPERIMENTAL_REUSE_BUILD: 1
     strategy:
       matrix:
         partition: [1, 2]
