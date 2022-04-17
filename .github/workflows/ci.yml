@@ -1,0 +1,68 @@
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Run this every day at 01:00 UTC.
+    cron: 0 1 * * *
+
+jobs:
+  build-artifacts:
+    name: Build test artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # By default actions/checkout checks out a merge commit. Check out the PR head instead.
+          # https://github.com/actions/checkout#checkout-pull-request-head-commit-instead-of-merge-commit
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+      - name: Gather Cargo metadata
+        run: cargo metadata --format-version=1 --all-features > target/cargo-metadata.json
+      - name: Build tests and save binaries metadata
+        run: cargo nextest list --list-type binaries-only \
+          --message-format json > target/binaries-metadata.json
+      - name: Archive target directory
+        run: tar -czf build-artifacts.tar.gz target
+      - name: Upload archive to workflow
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: build-artifacts.tar.gz
+  
+  run-tests-partitioned:
+    name: Run tests with partitioning
+    runs-on: ubuntu-latest
+    env:
+      NEXTEST_EXPERIMENTAL_REUSE_BUILD: 1
+    matrix:
+      partition: [1, 2]
+    steps:
+      # The source directory must be checked out.
+      - uses: actions/checkout@v2
+        with:
+          # By default actions/checkout checks out a merge commit. Check out the PR head instead.
+          # https://github.com/actions/checkout#checkout-pull-request-head-commit-instead-of-merge-commit
+          ref: ${{ github.event.pull_request.head.sha }}
+      # In this example, the Rust toolchain is not installed. cargo nextest's run phase does not
+      # require Cargo. You can choose to install Rust if your tests require it, of course.
+      # Instead, create ~/.cargo/bin as required by the install action.
+      - run: mkdir -p ~/.cargo/bin
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+      - name: Download archive
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+      # This example extracts artifacts to "build-artifacts/target" to demonstrate target-dir remapping.
+      - name: Extract artifacts
+        run: tar -xf build-artifacts.tar.gz --one-top-level=build-artifacts
+      - name: Run tests
+        run: ~/.cargo/bin/cargo-nextest nextest run --cargo-metadata build-artifacts/cargo/cargo-metadata.json \
+          --binaries-metadata build-artifacts/target/binaries-metadata.json \
+          --target-dir-remap build-artifacts/target
+          --partition count:${{ matrix.partition }}/2
