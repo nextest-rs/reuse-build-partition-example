@@ -66,7 +66,7 @@ jobs:
       - name: Extract artifacts
         run: tar -xf build-artifacts.tar.gz --one-top-level=build-artifacts
       - name: Run tests
-        run: ~/.cargo/bin/cargo-nextest nextest run --cargo-metadata build-artifacts/cargo/cargo-metadata.json \
+        run: ~/.cargo/bin/cargo-nextest nextest run --cargo-metadata build-artifacts/target/cargo-metadata.json \
           --binaries-metadata build-artifacts/target/binaries-metadata.json \
           --target-dir-remap build-artifacts/target
           --partition count:${{ matrix.partition }}/2
