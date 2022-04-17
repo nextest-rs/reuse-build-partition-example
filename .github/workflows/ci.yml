@@ -39,8 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXTEST_EXPERIMENTAL_REUSE_BUILD: 1
-    matrix:
-      partition: [1, 2]
+    strategy:
+      matrix:
+        partition: [1, 2]
     steps:
       # The source directory must be checked out.
       - uses: actions/checkout@v2
