@@ -21,11 +21,13 @@ jobs:
           override: true
       - name: Install nextest
         uses: taiki-e/install-action@nextest
+      - name: Create target directory
+        run: mkdir -p target
+      - name: Gather Cargo metadata
+        run: cargo metadata --format-version=1 --all-features > target/cargo-metadata.json
       - name: Build tests and save binaries metadata
         run: cargo nextest list --list-type binaries-only \
           --message-format json > target/binaries-metadata.json
-      - name: Gather Cargo metadata
-        run: cargo metadata --format-version=1 --all-features > target/cargo-metadata.json
       - name: Archive target directory
         run: tar -czf build-artifacts.tar.gz target
       - name: Upload archive to workflow
