@@ -6,7 +6,7 @@ on:
     - cron: 0 1 * * *
 
 jobs:
-  build-artifacts:
+  build-test-artifacts:
     name: Build test artifacts
     runs-on: ubuntu-latest
     steps:
@@ -21,11 +21,11 @@ jobs:
           override: true
       - name: Install nextest
         uses: taiki-e/install-action@nextest
-      - name: Gather Cargo metadata
-        run: cargo metadata --format-version=1 --all-features > target/cargo-metadata.json
       - name: Build tests and save binaries metadata
         run: cargo nextest list --list-type binaries-only \
           --message-format json > target/binaries-metadata.json
+      - name: Gather Cargo metadata
+        run: cargo metadata --format-version=1 --all-features > target/cargo-metadata.json
       - name: Archive target directory
         run: tar -czf build-artifacts.tar.gz target
       - name: Upload archive to workflow
@@ -37,6 +37,7 @@ jobs:
   run-tests-partitioned:
     name: Run tests with partitioning
     runs-on: ubuntu-latest
+    needs: build-test-artifacts
     env:
       NEXTEST_EXPERIMENTAL_REUSE_BUILD: 1
     strategy:
