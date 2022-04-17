@@ -70,5 +70,5 @@ jobs:
         run: |
           ~/.cargo/bin/cargo-nextest nextest run --cargo-metadata build-artifacts/target/cargo-metadata.json \
             --binaries-metadata build-artifacts/target/binaries-metadata.json \
-            --target-dir-remap build-artifacts/target
+            --target-dir-remap build-artifacts/target \
             --partition count:${{ matrix.partition }}/2
