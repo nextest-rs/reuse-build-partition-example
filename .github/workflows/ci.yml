@@ -1,12 +1,19 @@
 # Working example showing how to use nextest to reuse builds and partition test runs on GitHub Actions.
 # See workflow runs at https://github.com/nextest-rs/reuse-build-partition-example/actions/workflows/ci.yml.
 
+name: CI
+
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   schedule:
     # Run this every day at 01:00 UTC.
     - cron: 0 1 * * *
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build-test-artifacts:
@@ -24,21 +31,13 @@ jobs:
           override: true
       - name: Install nextest
         uses: taiki-e/install-action@nextest
-      - name: Create target directory
-        run: mkdir -p target
-      - name: Gather Cargo metadata
-        run: cargo metadata --format-version=1 --all-features > target/cargo-metadata.json
-      - name: Build tests and save binaries metadata
-        run: |
-          cargo nextest list --list-type binaries-only \
-            --message-format json > target/binaries-metadata.json
-      - name: Archive target directory
-        run: tar -czf build-artifacts.tar.gz target
+      - name: Build and archive tests
+        run: cargo nextest archive --archive-file nextest-archive.tar.zst
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts
-          path: build-artifacts.tar.gz
+          name: nextest-archive
+          path: nextest-archive.tar.zst
   
   run-tests-partitioned:
     name: Run tests with partitioning
@@ -63,13 +62,8 @@ jobs:
       - name: Download archive
         uses: actions/download-artifact@v3
         with:
-          name: build-artifacts
-      # This example extracts artifacts to "build-artifacts/target" to demonstrate target-dir remapping.
-      - name: Extract artifacts
-        run: tar -xf build-artifacts.tar.gz --one-top-level=build-artifacts
+          name: nextest-archive
       - name: Run tests
         run: |
-          ~/.cargo/bin/cargo-nextest nextest run --cargo-metadata build-artifacts/target/cargo-metadata.json \
-            --binaries-metadata build-artifacts/target/binaries-metadata.json \
-            --target-dir-remap build-artifacts/target \
+          ~/.cargo/bin/cargo-nextest nextest run --archive-file nextest-archive.tar.zst \
             --partition count:${{ matrix.partition }}/2
