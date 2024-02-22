@@ -20,7 +20,7 @@ jobs:
     name: Build test artifacts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # By default actions/checkout checks out a merge commit. Check out the PR head instead.
           # https://github.com/actions/checkout#checkout-pull-request-head-commit-instead-of-merge-commit
@@ -34,7 +34,7 @@ jobs:
       - name: Build and archive tests
         run: cargo nextest archive --archive-file nextest-archive.tar.zst
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
@@ -48,7 +48,7 @@ jobs:
         partition: [1, 2]
     steps:
       # The source directory must be checked out.
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # By default actions/checkout checks out a merge commit. Check out the PR head instead.
           # https://github.com/actions/checkout#checkout-pull-request-head-commit-instead-of-merge-commit
@@ -60,7 +60,7 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@nextest
       - name: Download archive
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: nextest-archive
       - name: Run tests
